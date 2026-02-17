@@ -1,6 +1,6 @@
 'use client'; // 1. Add this at the very top because we need hooks
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'; // 2. Import usePathname
 import NewTaskButton from '../component/NewTaskButton';
@@ -11,11 +11,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname(); // 3. Get the current URL path
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)] font-display">
       
-      {/* Sidebar */}
+      {/* Sidebar (Desktop) */}
       <aside className="hidden lg:flex w-72 flex-col justify-between border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111318] p-4 z-10">
         <div className="flex flex-col gap-4">
           
@@ -67,11 +73,89 @@ export default function DashboardLayout({
         </div>
       </aside>
 
+      {/* Mobile Sidebar + Overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/40 z-30"
+          aria-hidden="true"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        id="mobile-sidebar"
+        className={`lg:hidden fixed inset-y-0 left-0 w-72 flex flex-col justify-between border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111318] p-4 z-40 transform transition-transform duration-300 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        role="dialog"
+        aria-label="Navigation"
+        aria-modal="true"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Brand + Close */}
+          <div className="flex items-center justify-between px-2 py-2">
+            <div className="flex items-center gap-3">
+              <div className="bg-center bg-no-repeat bg-cover rounded-full size-10 bg-[#1f68f9] flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                <span className="material-symbols-outlined text-2xl">task_alt</span>
+              </div>
+              <div className="flex flex-col">
+                <h1 className="text-slate-900 dark:text-white text-base font-bold leading-normal">
+                  TaskMaster
+                </h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">
+                  Pro Workspace
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="p-2 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#272d3a] focus:outline-none focus:ring-2 focus:ring-[#1f68f9]"
+              aria-label="Close navigation menu"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex flex-col gap-2 mt-2">
+            <NavItem href="/dashboard" icon="dashboard" label="Dashboard" currentPath={pathname} />
+            <NavItem href="/dashboard/tasks" icon="check_circle" label="My Tasks" currentPath={pathname} />
+            <NavItem href="/dashboard/projects" icon="folder" label="Projects" currentPath={pathname} />
+            <NavItem href="/dashboard/teams" icon="group" label="Teams" currentPath={pathname} />
+            <NavItem href="/dashboard/settings" icon="settings" label="Settings" currentPath={pathname} />
+          </nav>
+        </div>
+
+        {/* Footer */}
+        <div className="flex flex-col gap-4">
+          <NewTaskButton />
+          <div className="flex items-center gap-3 px-2 py-2 mt-2 border-t border-slate-200 dark:border-slate-800 pt-4">
+            <img 
+              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" 
+              alt="Profile" 
+              className="rounded-full size-10 bg-slate-200 object-cover"
+            />
+            <div className="flex flex-col">
+              <p className="text-slate-900 dark:text-white text-sm font-medium">
+                Alex Morgan
+              </p>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">
+                alex@taskmaster.com
+              </p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50 dark:bg-[#0f1623]">
         {/* Header */}
         <header className="h-16 flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111318] sticky top-0 z-20">
-            <button className="lg:hidden text-slate-500 dark:text-white">
+            <button
+              className="lg:hidden text-slate-600 dark:text-white p-2 rounded-md hover:bg-slate-100 dark:hover:bg-[#272d3a] focus:outline-none focus:ring-2 focus:ring-[#1f68f9]"
+              aria-label="Open navigation menu"
+              aria-controls="mobile-sidebar"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen(true)}
+            >
                 <span className="material-symbols-outlined">menu</span>
             </button>
             <div className="hidden md:flex max-w-md w-full ml-4">
