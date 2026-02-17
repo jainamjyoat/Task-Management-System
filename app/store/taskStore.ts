@@ -33,6 +33,7 @@ interface TaskState {
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   moveTask: (id: string, newStatus: TaskStatus) => void;
+  addNotification: (message: string, type: 'info' | 'success' | 'warning') => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   clearNotifications: () => void;
@@ -144,6 +145,19 @@ export const useTaskStore = create<TaskState>()(
             return { ...t, status: newStatus, completedAt };
           }),
         })),
+      addNotification: (message, type) =>
+        set((state) => ({
+          notifications: [
+            {
+              id: crypto.randomUUID(),
+              message,
+              type,
+              createdAt: new Date().toISOString(),
+              read: false,
+            },
+            ...state.notifications,
+          ],
+        })),
       markNotificationRead: (id) =>
         set((state) => ({
           notifications: state.notifications.map((n) =>
@@ -164,3 +178,4 @@ export const useTaskStore = create<TaskState>()(
     }
   )
 );
+
