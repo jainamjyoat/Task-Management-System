@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 "use client"
+=======
+'use client'
+
+>>>>>>> origin
 import React, { useState } from 'react';
 
 const TaskMasterLogin: React.FC = () => {
@@ -11,11 +16,22 @@ const TaskMasterLogin: React.FC = () => {
   };
 
   return (
+<<<<<<< HEAD
     <div className="flex min-h-screen flex-1 bg-[var(--background)] text-[var(--foreground)] font-display">
       
       {/* Left Side: Branding (Hidden on Mobile) */}
       <div className="relative hidden w-0 flex-1 lg:block bg-slate-900">
         <div className="flex h-full flex-col justify-between p-12 relative z-10">
+=======
+    // Used var(--background) to match your global theme
+    <div className="flex min-h-screen flex-1 bg-[var(--background)] text-[var(--foreground)] font-display">
+      
+      {/* Left Side: Branding (Always Dark Slate) */}
+      <div className="relative hidden w-0 flex-1 lg:block bg-slate-900">
+        <div className="flex h-full flex-col justify-between p-12 relative z-10">
+          
+          {/* Logo */}
+>>>>>>> origin
           <div className="flex gap-3 items-center">
             <div className="bg-indigo-600 rounded-xl size-10 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30">
               <span className="material-symbols-outlined text-2xl">task_alt</span>
@@ -27,6 +43,10 @@ const TaskMasterLogin: React.FC = () => {
             </div>
           </div>
 
+<<<<<<< HEAD
+=======
+          {/* Hero Text */}
+>>>>>>> origin
           <div className="space-y-6 max-w-lg">
             <h2 className="text-4xl font-extrabold text-white leading-tight">
               Organize your work, <br />
@@ -36,6 +56,11 @@ const TaskMasterLogin: React.FC = () => {
               Join thousands of teams using TaskMaster to streamline their
               workflow, track progress, and collaborate seamlessly in real-time.
             </p>
+<<<<<<< HEAD
+=======
+            
+            {/* Social Proof */}
+>>>>>>> origin
             <div className="flex items-center gap-4 mt-8">
               <div className="flex -space-x-3">
                 {[0, 1, 2].map((i) => (
@@ -56,6 +81,10 @@ const TaskMasterLogin: React.FC = () => {
             </div>
           </div>
 
+<<<<<<< HEAD
+=======
+          {/* Footer Links */}
+>>>>>>> origin
           <div className="flex gap-6 text-sm text-slate-500">
             <a className="hover:text-white transition-colors" href="#">
               Privacy Policy
@@ -66,6 +95,10 @@ const TaskMasterLogin: React.FC = () => {
           </div>
         </div>
 
+<<<<<<< HEAD
+=======
+        {/* Background Image & Overlay */}
+>>>>>>> origin
         <div
           className="absolute inset-0 bg-cover bg-center opacity-10 mix-blend-overlay"
           style={{
@@ -73,6 +106,10 @@ const TaskMasterLogin: React.FC = () => {
               "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')",
           }}
         />
+<<<<<<< HEAD
+=======
+        {/* Gradient Overlay */}
+>>>>>>> origin
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/90 to-slate-900/80" />
       </div>
 
@@ -80,6 +117,10 @@ const TaskMasterLogin: React.FC = () => {
       <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           
+<<<<<<< HEAD
+=======
+          {/* Mobile Logo (Visible only on small screens) */}
+>>>>>>> origin
           <div className="lg:hidden flex gap-2 items-center mb-8">
             <div className="bg-indigo-600 rounded-lg size-8 flex items-center justify-center text-white">
               <span className="material-symbols-outlined text-xl">
@@ -165,6 +206,7 @@ const TaskMasterLogin: React.FC = () => {
               </div>
             </form>
 
+<<<<<<< HEAD
             {/* --- NEW SECTION: Social Login --- */}
             <div className="mt-10">
               <div className="relative">
@@ -230,6 +272,8 @@ const TaskMasterLogin: React.FC = () => {
             </div>
             {/* --- END NEW SECTION --- */}
 
+=======
+>>>>>>> origin
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-500">
                 Don't have an account?{' '}
