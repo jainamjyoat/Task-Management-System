@@ -1,6 +1,10 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import NewTaskModal from '../../component/NewTaskModal';
 
 export default function ProjectsPage() {
+  const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="flex flex-col h-full">
       {/* Page Summary & Actions */}
@@ -18,7 +22,7 @@ export default function ProjectsPage() {
             <span className="material-symbols-outlined text-lg">filter_list</span>
             Sort by
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#1f68f9] text-white rounded-lg text-sm font-bold hover:bg-blue-600 transition-all shadow-md shadow-blue-500/20">
+          <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-[#1f68f9] text-white rounded-lg text-sm font-bold hover:bg-blue-600 transition-all shadow-md shadow-blue-500/20">
             <span className="material-symbols-outlined text-lg">add</span>
             New Project
           </button>
@@ -115,7 +119,7 @@ export default function ProjectsPage() {
         </div>
 
         {/* Create New Card Placeholder */}
-        <button className="bg-slate-100/50 dark:bg-[#111318]/30 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center p-8 hover:bg-white dark:hover:bg-[#111318]/50 hover:border-[#1f68f9]/50 transition-all group min-h-[280px]">
+        <button onClick={() => setIsOpen(true)} className="bg-slate-100/50 dark:bg-[#111318]/30 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center p-8 hover:bg-white dark:hover:bg-[#111318]/50 hover:border-[#1f68f9]/50 transition-all group min-h-[280px]">
           <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mb-4 group-hover:bg-[#1f68f9]/10 group-hover:text-[#1f68f9] transition-all">
             <span className="material-symbols-outlined text-3xl">add</span>
           </div>
@@ -123,6 +127,7 @@ export default function ProjectsPage() {
         </button>
 
       </div>
+      <NewTaskModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </div>
   );
 }
