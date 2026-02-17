@@ -19,7 +19,7 @@ import {
 } from '@dnd-kit/core';
 
 export default function MyTasksPage() {
-  const { tasks, moveTask, updateTask, deleteTask } = useTaskStore();
+  const { tasks, updateTask, deleteTask } = useTaskStore();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Modal State

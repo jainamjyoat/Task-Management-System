@@ -15,14 +15,27 @@ export interface Task {
   createdAt: string;
   assignee?: string; // New field
   attachments?: string[]; // New field (filenames)
+  completedAt?: string; // ISO string
+}
+
+export interface Notification {
+  id: string;
+  message: string;
+  type: 'info' | 'success' | 'warning';
+  createdAt: string;
+  read: boolean;
 }
 
 interface TaskState {
   tasks: Task[];
+  notifications: Notification[];
   addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   moveTask: (id: string, newStatus: TaskStatus) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
 }
 
 export const useTaskStore = create<TaskState>()(
@@ -62,6 +75,15 @@ export const useTaskStore = create<TaskState>()(
           createdAt: new Date().toISOString(),
         }
       ],
+      notifications: [
+        {
+          id: '1',
+          message: 'Welcome to TaskMaster! Try creating a new task.',
+          type: 'info',
+          createdAt: new Date().toISOString(),
+          read: false,
+        }
+      ],
       addTask: (task) =>
         set((state) => ({
           tasks: [
@@ -70,12 +92,38 @@ export const useTaskStore = create<TaskState>()(
               ...task,
               id: crypto.randomUUID(), // Native UUID
               createdAt: new Date().toISOString(),
+              completedAt: task.status === 'Done' ? new Date().toISOString() : undefined,
             },
+          ],
+          // Add notification when task is created
+          notifications: [
+            {
+              id: crypto.randomUUID(),
+              message: `New task created: "${task.title}"`,
+              type: 'success',
+              createdAt: new Date().toISOString(),
+              read: false,
+            },
+            ...state.notifications,
           ],
         })),
       updateTask: (id, updates) =>
         set((state) => ({
-          tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+          tasks: state.tasks.map((t) => {
+            if (t.id !== id) return t;
+
+            // Logic for completedAt
+            const newStatus = updates.status;
+            let completedAt = t.completedAt;
+
+            if (newStatus === 'Done' && t.status !== 'Done') {
+              completedAt = new Date().toISOString();
+            } else if (newStatus && newStatus !== 'Done') {
+              completedAt = undefined;
+            }
+
+            return { ...t, ...updates, completedAt };
+          }),
         })),
       deleteTask: (id) =>
         set((state) => ({
@@ -83,9 +131,32 @@ export const useTaskStore = create<TaskState>()(
         })),
       moveTask: (id, newStatus) =>
         set((state) => ({
-          tasks: state.tasks.map((t) =>
-            t.id === id ? { ...t, status: newStatus } : t
+          tasks: state.tasks.map((t) => {
+            if (t.id !== id) return t;
+
+            let completedAt = t.completedAt;
+            if (newStatus === 'Done' && t.status !== 'Done') {
+              completedAt = new Date().toISOString();
+            } else if (newStatus !== 'Done') {
+              completedAt = undefined;
+            }
+
+            return { ...t, status: newStatus, completedAt };
+          }),
+        })),
+      markNotificationRead: (id) =>
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n
           ),
+        })),
+      markAllNotificationsRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        })),
+      clearNotifications: () =>
+        set((state) => ({
+          notifications: [],
         })),
     }),
     {

@@ -1,8 +1,8 @@
-"use client"
+  "use client"
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useTaskStore, Task } from '../store/taskStore';
-import { format, isToday, isFuture, parseISO } from 'date-fns';
+import { format, isToday, isFuture, parseISO, isSameDay } from 'date-fns';
 import NewTaskModal from '../component/NewTaskModal';
 
 export default function DashboardPage() {
@@ -27,6 +27,38 @@ export default function DashboardPage() {
     setEditingTask(task);
     setIsModalOpen(true);
   };
+
+  // Calculate Productivity Graph Data (Last 7 Days)
+  const productivityData = React.useMemo(() => {
+    const days = [];
+    const counts = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dayLabel = format(date, 'EEE'); // Mon, Tue, etc.
+
+      // Count tasks completed on this day
+      const count = tasks.filter(t => {
+        if (t.status === 'Done') {
+          // Use completedAt if available, otherwise fallback to createdAt (for legacy/newly created done tasks)
+          const dateRef = t.completedAt || t.createdAt;
+          return isSameDay(parseISO(dateRef), date);
+        }
+        return false;
+      }).length;
+
+      days.push(dayLabel);
+      counts.push(count);
+    }
+
+    // Normalize heights for visualization (max value = 100%)
+    const maxCount = Math.max(...counts, 1); // Avoid division by zero
+    const heights = counts.map(c => Math.round((c / maxCount) * 100));
+
+    return { days, counts, heights };
+  }, [tasks]);
 
   return (
     <>
@@ -68,16 +100,21 @@ export default function DashboardPage() {
           </div>
           {/* Custom CSS Bar Chart */}
           <div className="flex-1 flex items-end justify-between gap-2 md:gap-6 min-h-[200px] px-2 pb-2">
-            {[40, 70, 50, 85, 60, 20, 10].map((height, i) => (
+            {productivityData.heights.map((height, i) => (
               <div key={i} className="flex flex-col items-center gap-2 w-full group cursor-pointer">
                 <div className="w-full max-w-[40px] bg-[#1f68f9]/20 rounded-t-sm h-full relative overflow-hidden group-hover:bg-[#1f68f9]/30 transition-all">
                   <div
                     className="absolute bottom-0 w-full bg-[#1f68f9] rounded-t-sm transition-all duration-500 ease-out"
                     style={{ height: `${height}%` }}
                   ></div>
+
+                  {/* Tooltip for exact count */}
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                    {productivityData.counts[i]} tasks
+                  </div>
                 </div>
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}
+                  {productivityData.days[i]}
                 </span>
               </div>
             ))}
