@@ -50,3 +50,34 @@ body {
   background: #272d3a;
   border-radius: 10px;
 }
+
+/* Global scrollbar styling (WebKit) */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Slate-300 */
+  border-radius: 9999px;
+  border: 2px solid transparent; /* creates visual padding around thumb */
+  background-clip: content-box;
+}
+.dark html::-webkit-scrollbar-thumb,
+.dark body::-webkit-scrollbar-thumb {
+  background: #272d3a; /* matches dark surfaces */
+}
+
+/* Global scrollbar styling (Firefox) */
+html, body {
+  scrollbar-width: thin; /* auto | thin | none */
+  scrollbar-color: #cbd5e1 transparent; /* thumb track */
+}
+.dark html, .dark body {
+  scrollbar-color: #272d3a transparent;
+}
