@@ -2,23 +2,50 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useTaskStore, TaskPriority, TaskStatus } from '../store/taskStore';
+import { useTaskStore, TaskPriority, TaskStatus, Task } from '../store/taskStore';
 
-interface NewTaskModalProps {
+interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
+  taskToEdit?: Task | null; // Optional prop for editing
 }
 
-const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose }) => {
+const NewTaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdit }) => {
   const [mounted, setMounted] = useState(false);
-  const { addTask } = useTaskStore();
+  const { addTask, updateTask, deleteTask } = useTaskStore();
 
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('Medium');
   const [status, setStatus] = useState<TaskStatus>('To Do');
-  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]); // Default Today
+  const [dueDate, setDueDate] = useState('');
+  const [assignee, setAssignee] = useState('');
+  const [attachments, setAttachments] = useState<string[]>([]);
+
+  // Effect to populate form when editing
+  useEffect(() => {
+    if (isOpen) {
+      if (taskToEdit) {
+        setTitle(taskToEdit.title);
+        setDescription(taskToEdit.description || '');
+        setPriority(taskToEdit.priority);
+        setStatus(taskToEdit.status);
+        setDueDate(taskToEdit.dueDate.split('T')[0]);
+        setAssignee(taskToEdit.assignee || '');
+        setAttachments(taskToEdit.attachments || []);
+      } else {
+        // Reset for new task
+        setTitle('');
+        setDescription('');
+        setPriority('Medium');
+        setStatus('To Do');
+        setDueDate(new Date().toISOString().split('T')[0]);
+        setAssignee('');
+        setAttachments([]);
+      }
+    }
+  }, [isOpen, taskToEdit]);
 
   // Ensure we only try to use the portal on the client-side
   useEffect(() => {
@@ -40,21 +67,37 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    addTask({
+    const taskData = {
       title,
       description,
       priority,
       status,
       dueDate: new Date(dueDate).toISOString(),
-    });
+      assignee,
+      attachments,
+    };
 
-    // Reset and Close
-    setTitle('');
-    setDescription('');
-    setPriority('Medium');
-    setStatus('To Do');
-    setDueDate(new Date().toISOString().split('T')[0]);
+    if (taskToEdit) {
+      updateTask(taskToEdit.id, taskData);
+    } else {
+      addTask(taskData);
+    }
+
     onClose();
+  };
+
+  const handleDelete = () => {
+    if (taskToEdit && confirm('Are you sure you want to delete this task?')) {
+      deleteTask(taskToEdit.id);
+      onClose();
+    }
+  };
+
+  // Mock Attachment Upload
+  const handleAttachmentClick = () => {
+    const mockFiles = ['design_mockup.png', 'specs.pdf', 'assets.zip'];
+    const randomFile = mockFiles[Math.floor(Math.random() * mockFiles.length)];
+    setAttachments([...attachments, randomFile]);
   };
 
   if (!mounted || !isOpen) return null;
@@ -73,8 +116,12 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Task</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Add details for a new item in your workspace.</p>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              {taskToEdit ? 'Edit Task' : 'Create New Task'}
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              {taskToEdit ? 'Update task details below.' : 'Add details for a new item in your workspace.'}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -98,7 +145,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose }) => {
                 id="task-title"
                 placeholder="e.g. Redesign Landing Page Homepage"
                 type="text"
-                autoFocus
+                autoFocus={!taskToEdit}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
@@ -173,38 +220,83 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose }) => {
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Assignee</label>
               <div className="relative group">
                 <span className="material-symbols-outlined absolute left-3 top-3 text-slate-400">person_search</span>
-                <input className="w-full pl-10 rounded-lg bg-slate-50 dark:bg-[#0f1623] border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 p-3 text-sm focus:ring-2 focus:ring-[#1f68f9]/50 focus:border-[#1f68f9] outline-none" placeholder="Search team member..." type="text" />
+                <input
+                  className="w-full pl-10 rounded-lg bg-slate-50 dark:bg-[#0f1623] border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 p-3 text-sm focus:ring-2 focus:ring-[#1f68f9]/50 focus:border-[#1f68f9] outline-none"
+                  placeholder="Search team member..."
+                  type="text"
+                  value={assignee}
+                  onChange={(e) => setAssignee(e.target.value)}
+                />
               </div>
             </div>
 
             {/* Attachments */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Attachments</label>
-              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-[#0f1623] transition-colors cursor-pointer group">
+              <div
+                onClick={handleAttachmentClick}
+                className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 dark:hover:bg-[#0f1623] transition-colors cursor-pointer group"
+              >
                 <span className="material-symbols-outlined text-3xl text-slate-400 group-hover:text-[#1f68f9] transition-colors mb-2">cloud_upload</span>
                 <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Click to upload or drag and drop</p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">SVG, PNG, JPG or GIF (max. 800x400px)</p>
               </div>
+
+              {/* Attachment List */}
+              {attachments.length > 0 && (
+                <ul className="flex flex-wrap gap-2 mt-2">
+                  {attachments.map((file, idx) => (
+                    <li key={idx} className="bg-slate-100 dark:bg-[#0f1623] border border-slate-200 dark:border-slate-700 rounded px-3 py-1 text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">attachment</span>
+                      {file}
+                      <button
+                        type='button'
+                        onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}
+                        className="hover:text-red-500"
+                      >
+                        <span className="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
           </form>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-[#1e293b] rounded-b-xl">
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-5 py-2.5 rounded-lg bg-[#1f68f9] hover:bg-blue-600 text-white font-medium text-sm shadow-lg shadow-blue-500/20 transition-colors flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-lg">add</span>
-            Create Task
-          </button>
+        <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-between gap-3 bg-slate-50 dark:bg-[#1e293b] rounded-b-xl">
+
+          {/* Left side: Delete (only if editing) */}
+          <div>
+            {taskToEdit && (
+              <button
+                type='button'
+                onClick={handleDelete}
+                className="px-4 py-2.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <span className="material-symbols-outlined text-lg">delete</span>
+                Delete
+              </button>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="px-5 py-2.5 rounded-lg bg-[#1f68f9] hover:bg-blue-600 text-white font-medium text-sm shadow-lg shadow-blue-500/20 transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg">{taskToEdit ? 'save' : 'add'}</span>
+              {taskToEdit ? 'Save Changes' : 'Create Task'}
+            </button>
+          </div>
         </div>
 
       </div>

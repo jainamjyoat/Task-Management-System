@@ -1,11 +1,16 @@
 "use client"
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { useTaskStore } from '../store/taskStore';
+import { useTaskStore, Task } from '../store/taskStore';
 import { format, isToday, isFuture, parseISO } from 'date-fns';
+import NewTaskModal from '../component/NewTaskModal';
 
 export default function DashboardPage() {
   const { tasks } = useTaskStore();
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Calculate Stats
   const dueToday = tasks.filter(t => isToday(parseISO(t.dueDate)) && t.status !== 'Done').length;
@@ -17,6 +22,11 @@ export default function DashboardPage() {
     .filter(t => t.status !== 'Done' && (isFuture(parseISO(t.dueDate)) || isToday(parseISO(t.dueDate))))
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 3);
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
 
   return (
     <>
@@ -121,16 +131,17 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-3">
             {upcomingTasks.length > 0 ? (
               upcomingTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  title={task.title}
-                  team={task.description || "General"}
-                  priority={task.priority}
-                  priorityColor={task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'amber' : 'blue'}
-                  time={format(parseISO(task.dueDate), 'MMM d, h:mm a')}
-                  icon="event"
-                  iconBg="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                />
+                <div key={task.id} onClick={() => handleEditTask(task)}>
+                  <TaskItem
+                    title={task.title}
+                    team={task.description || "General"}
+                    priority={task.priority}
+                    priorityColor={task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'amber' : 'blue'}
+                    time={format(parseISO(task.dueDate), 'MMM d, h:mm a')}
+                    icon="event"
+                    iconBg="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  />
+                </div>
               ))
             ) : (
               <p className="text-slate-500 text-sm italic">No upcoming deadlines.</p>
@@ -147,14 +158,23 @@ export default function DashboardPage() {
             </div>
             <h3 className="text-xl font-bold mb-2">Clean up your workspace</h3>
             <p className="text-blue-100 text-sm mb-6">
-              You have 3 tasks in "Review" that have been stale for over 2 days.
+              You can drag and drop tasks to organize them, or click on them to edit details.
             </p>
           </div>
-          <button className="w-full py-3 bg-white text-[#1f68f9] font-bold rounded-lg text-sm hover:bg-blue-50 transition-colors">
+          <Link
+            href="/dashboard/tasks"
+            className="w-full py-3 bg-white text-[#1f68f9] font-bold rounded-lg text-sm hover:bg-blue-50 transition-colors flex items-center justify-center"
+          >
             Review Tasks
-          </button>
+          </Link>
         </div>
       </div>
+
+      <NewTaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        taskToEdit={editingTask}
+      />
     </>
   );
 }

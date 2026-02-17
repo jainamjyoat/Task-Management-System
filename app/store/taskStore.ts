@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid'; // We'll need uuid, or just use Date.now() for simplicity if not installed
+// uuid import removed as we use crypto.randomUUID()
 
 export type TaskStatus = 'To Do' | 'In Progress' | 'Review' | 'Done';
 export type TaskPriority = 'Low' | 'Medium' | 'High';
@@ -13,6 +13,8 @@ export interface Task {
   priority: TaskPriority;
   dueDate: string; // ISO string
   createdAt: string;
+  assignee?: string; // New field
+  attachments?: string[]; // New field (filenames)
 }
 
 interface TaskState {
@@ -51,7 +53,7 @@ export const useTaskStore = create<TaskState>()(
           dueDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
           createdAt: new Date().toISOString(),
         },
-         {
+        {
           id: '4',
           title: 'Code Review for Authentication',
           status: 'Review',
