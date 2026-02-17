@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 const TaskMasterLogin: React.FC = () => {
   const [email, setEmail] = useState<string>('');
@@ -206,9 +207,12 @@ const TaskMasterLogin: React.FC = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-500">
                 Don't have an account?{' '}
-                <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                <Link 
+                  href="/signup" 
+                    className="font-semibold text-indigo-600 hover:text-indigo-500"
+                  >
                   Sign up for free
-                </a>
+                </Link>
               </p>
             </div>
           </div>
