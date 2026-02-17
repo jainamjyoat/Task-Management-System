@@ -1,8 +1,23 @@
 "use client"
 import React from 'react';
 import Link from 'next/link';
+import { useTaskStore } from '../store/taskStore';
+import { format, isToday, isFuture, parseISO } from 'date-fns';
 
 export default function DashboardPage() {
+  const { tasks } = useTaskStore();
+
+  // Calculate Stats
+  const dueToday = tasks.filter(t => isToday(parseISO(t.dueDate)) && t.status !== 'Done').length;
+  const pendingTasks = tasks.filter(t => t.status !== 'Done').length;
+  const completedWeek = tasks.filter(t => t.status === 'Done').length; // Simplified for now
+
+  // Get Upcoming Deadlines (Not Done, Future Date)
+  const upcomingTasks = tasks
+    .filter(t => t.status !== 'Done' && (isFuture(parseISO(t.dueDate)) || isToday(parseISO(t.dueDate))))
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 3);
+
   return (
     <>
       {/* Greeting */}
@@ -12,20 +27,20 @@ export default function DashboardPage() {
             Good morning, Alex
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-base">
-            You have <span className="text-[#1f68f9] font-semibold">4 tasks</span> due today. Let's get things done.
+            You have <span className="text-[#1f68f9] font-semibold">{dueToday} tasks</span> due today. Let's get things done.
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 bg-white dark:bg-[#111318] px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
           <span className="material-symbols-outlined text-[#1f68f9]">calendar_today</span>
-          <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          <span>{format(new Date(), 'MMM d, yyyy')}</span>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard title="Due Today" value="4" icon="warning" color="orange" />
-        <StatCard title="Pending Tasks" value="12" icon="pending_actions" color="blue" />
-        <StatCard title="Completed (Week)" value="20" icon="task_alt" color="green" />
+        <StatCard title="Due Today" value={dueToday.toString()} icon="warning" color="orange" />
+        <StatCard title="Pending Tasks" value={pendingTasks.toString()} icon="pending_actions" color="blue" />
+        <StatCard title="Completed (All Time)" value={completedWeek.toString()} icon="task_alt" color="green" />
       </div>
 
       {/* Charts Section */}
@@ -77,17 +92,17 @@ export default function DashboardPage() {
             >
               {/* Inner Circle for Donut Effect */}
               <div className="absolute inset-0 m-auto size-32 bg-white dark:bg-[#111318] rounded-full flex items-center justify-center flex-col">
-                <span className="text-3xl font-bold text-slate-900 dark:text-white">12</span>
+                <span className="text-3xl font-bold text-slate-900 dark:text-white">{pendingTasks}</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">Active Tasks</span>
               </div>
             </div>
-            
+
             {/* Legend */}
             <div className="mt-6 grid grid-cols-2 gap-3 w-full">
-                <LegendItem color="bg-[#1f68f9]" label="To Do (40%)" />
-                <LegendItem color="bg-blue-400" label="In Progress (30%)" />
-                <LegendItem color="bg-amber-400" label="Review (10%)" />
-                <LegendItem color="bg-emerald-500" label="Done (20%)" />
+              <LegendItem color="bg-[#1f68f9]" label="To Do (40%)" />
+              <LegendItem color="bg-blue-400" label="In Progress (30%)" />
+              <LegendItem color="bg-amber-400" label="Review (10%)" />
+              <LegendItem color="bg-emerald-500" label="Done (20%)" />
             </div>
           </div>
         </div>
@@ -99,38 +114,27 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="flex justify-between items-center px-1">
             <h3 className="text-slate-900 dark:text-white text-lg font-bold">Upcoming Deadlines</h3>
-            <a className="text-[#1f68f9] text-sm font-semibold hover:underline" href="#">
+            <Link className="text-[#1f68f9] text-sm font-semibold hover:underline" href="/dashboard/tasks">
               View All
-            </a>
+            </Link>
           </div>
           <div className="flex flex-col gap-3">
-             <TaskItem 
-                title="Update Website Homepage" 
-                team="Marketing Team" 
-                priority="High Priority" 
-                priorityColor="red" 
-                time="Today, 5:00 PM"
-                icon="web"
-                iconBg="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-             />
-             <TaskItem 
-                title="Q3 Financial Report" 
-                team="Finance Dept" 
-                priority="Medium" 
-                priorityColor="amber" 
-                time="Tomorrow"
-                icon="attach_money"
-                iconBg="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-             />
-             <TaskItem 
-                title="Client Onboarding Flow" 
-                team="Product Team" 
-                priority="Normal" 
-                priorityColor="blue" 
-                time="Oct 24"
-                icon="rocket_launch"
-                iconBg="bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400"
-             />
+            {upcomingTasks.length > 0 ? (
+              upcomingTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  title={task.title}
+                  team={task.description || "General"}
+                  priority={task.priority}
+                  priorityColor={task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'amber' : 'blue'}
+                  time={format(parseISO(task.dueDate), 'MMM d, h:mm a')}
+                  icon="event"
+                  iconBg="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                />
+              ))
+            ) : (
+              <p className="text-slate-500 text-sm italic">No upcoming deadlines.</p>
+            )}
           </div>
         </div>
 
@@ -158,62 +162,62 @@ export default function DashboardPage() {
 // --- Helper Components for Dashboard ---
 
 function StatCard({ title, value, icon, color }: { title: string; value: string; icon: string; color: string }) {
-    // Map colors safely
-    const colorClasses: Record<string, string> = {
-        orange: 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400',
-        blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
-        green: 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400'
-    };
+  // Map colors safely
+  const colorClasses: Record<string, string> = {
+    orange: 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400',
+    blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
+    green: 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400'
+  };
 
-    return (
-        <div className="flex flex-col gap-3 rounded-xl p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111318] shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{title}</p>
-            <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-              <span className="material-symbols-outlined text-xl">{icon}</span>
-            </div>
-          </div>
-          <p className="text-slate-900 dark:text-white text-3xl font-bold">{value}</p>
+  return (
+    <div className="flex flex-col gap-3 rounded-xl p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111318] shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{title}</p>
+        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+          <span className="material-symbols-outlined text-xl">{icon}</span>
         </div>
-    );
+      </div>
+      <p className="text-slate-900 dark:text-white text-3xl font-bold">{value}</p>
+    </div>
+  );
 }
 
 function LegendItem({ color, label }: { color: string; label: string }) {
-    return (
-        <div className="flex items-center gap-2">
-            <div className={`size-3 rounded-full ${color}`}></div>
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{label}</span>
-        </div>
-    );
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`size-3 rounded-full ${color}`}></div>
+      <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{label}</span>
+    </div>
+  );
 }
 
 function TaskItem({ title, team, priority, priorityColor, time, icon, iconBg }: any) {
-    const priorityColors: Record<string, string> = {
-        red: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 border-red-200',
-        amber: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-amber-200',
-        blue: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border-blue-200',
-    };
+  const priorityColors: Record<string, string> = {
+    red: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 border-red-200',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-amber-200',
+    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border-blue-200',
+  };
 
-    return (
-        <div className="group flex flex-wrap md:flex-nowrap items-center justify-between gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111318] hover:border-[#1f68f9]/50 dark:hover:border-[#1f68f9]/50 transition-colors cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className={`size-10 rounded-full flex items-center justify-center ${iconBg}`}>
-                <span className="material-symbols-outlined">{icon}</span>
-              </div>
-              <div>
-                <h4 className="text-slate-900 dark:text-white font-semibold text-sm">{title}</h4>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">{team}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-              <span className={`px-2.5 py-1 rounded-full text-xs font-medium border dark:border-transparent ${priorityColors[priorityColor]}`}>
-                {priority}
-              </span>
-              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm">
-                <span className="material-symbols-outlined text-base">event</span>
-                <span>{time}</span>
-              </div>
-            </div>
+  return (
+    <div className="group flex flex-wrap md:flex-nowrap items-center justify-between gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111318] hover:border-[#1f68f9]/50 dark:hover:border-[#1f68f9]/50 transition-colors cursor-pointer">
+      <div className="flex items-center gap-4">
+        <div className={`size-10 rounded-full flex items-center justify-center ${iconBg}`}>
+          <span className="material-symbols-outlined">{icon}</span>
         </div>
-    )
+        <div>
+          <h4 className="text-slate-900 dark:text-white font-semibold text-sm">{title}</h4>
+          <p className="text-slate-500 dark:text-slate-400 text-xs">{team}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+        <span className={`px-2.5 py-1 rounded-full text-xs font-medium border dark:border-transparent ${priorityColors[priorityColor] || 'bg-slate-100 text-slate-700'}`}>
+          {priority}
+        </span>
+        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm">
+          <span className="material-symbols-outlined text-base">event</span>
+          <span>{time}</span>
+        </div>
+      </div>
+    </div>
+  )
 }
