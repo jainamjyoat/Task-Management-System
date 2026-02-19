@@ -81,3 +81,44 @@ html, body {
 .dark html, .dark body {
   scrollbar-color: #272d3a transparent;
 }
+
+/* MUI X Charts global styling: hide axis/grid lines and set tick labels */
+/* Applies to all MUI X Charts on the site; remove if you want per-chart control */
+.MuiChartsAxis-line {
+  stroke: none !important;
+}
+.MuiChartsAxis-tick {
+  stroke: none !important;
+}
+.MuiChartsGrid-line {
+  stroke: none !important;
+}
+.MuiChartsAxis-tickLabel {
+  fill: #94a3b8 !important; /* Slate-400 */
+  font-size: 0.75rem !important; /* 12px */
+  font-weight: 500 !important;
+}
+
+/* Generic line-number gutter hider */
+/* Opt-in keep class: add `.allow-line-gutter` on a parent to re-enable */
+:root:not(.allow-line-gutter) .line-numbers,
+:root:not(.allow-line-gutter) .line-number,
+:root:not(.allow-line-gutter) .gutter,
+:root:not(.allow-line-gutter) .left-gutter,
+:root:not(.allow-line-gutter) .number-gutter,
+:root:not(.allow-line-gutter) [data-line-numbers],
+:root:not(.allow-line-gutter) [aria-label="Line Numbers"],
+:root:not(.allow-line-gutter) .cm-gutters,
+:root:not(.allow-line-gutter) .cm-lineNumbers {
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* If an editor adjusts content offset when gutter is hidden, remove left offset */
+:root:not(.allow-line-gutter) .monaco-editor .view-overlays,
+:root:not(.allow-line-gutter) .monaco-editor .lines-content {
+  left: 0 !important;
+}

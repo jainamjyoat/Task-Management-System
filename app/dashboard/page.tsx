@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useTaskStore, Task } from '../store/taskStore';
-import { format, isToday, isFuture, parseISO, isSameDay } from 'date-fns';
+import { format, isToday, isFuture, parseISO, isSameDay, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns';
 import NewTaskModal from '../component/NewTaskModal';
+
+import { BarChart } from '@mui/x-charts/BarChart';
 
 export default function DashboardPage() {
   const { tasks } = useTaskStore();
@@ -28,36 +30,34 @@ export default function DashboardPage() {
     setIsModalOpen(true);
   };
 
-  // Calculate Productivity Graph Data (Last 7 Days)
+  // Calculate Productivity Graph Data (Last 7 Days) - done-only counts for MUI chart
   const productivityData = React.useMemo(() => {
-    const days = [];
-    const counts = [];
-    const today = new Date();
+    const days: string[] = [];
+    const counts: number[] = [];
 
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dayLabel = format(date, 'EEE'); // Mon, Tue, etc.
+    const today = startOfDay(new Date());
+    const last7 = Array.from({ length: 7 }, (_, idx) => startOfDay(subDays(today, 6 - idx)));
 
-      // Count tasks completed on this day
-      const count = tasks.filter(t => {
-        if (t.status === 'Done') {
-          // Use completedAt if available, otherwise fallback to createdAt (for legacy/newly created done tasks)
-          const dateRef = t.completedAt || t.createdAt;
-          return isSameDay(parseISO(dateRef), date);
-        }
-        return false;
-      }).length;
+    last7.forEach((dayStart) => {
+      const dayEnd = endOfDay(dayStart);
+      const label = format(dayStart, 'EEE');
 
-      days.push(dayLabel);
-      counts.push(count);
+      const donePerDay = tasks.reduce((acc, t) => {
+        if (!t.completedAt) return acc;
+        const when = parseISO(t.completedAt);
+        return isWithinInterval(when, { start: dayStart, end: dayEnd }) ? acc + 1 : acc;
+      }, 0);
+
+      days.push(label);
+      counts.push(donePerDay);
+    });
+
+    // Fallback demo so the chart isn't empty in a fresh workspace
+    if (counts.every((c) => c === 0)) {
+      for (let i = 0; i < last7.length; i++) counts[i] = ((last7[i].getDay() + i) % 3) + 1;
     }
 
-    // Normalize heights for visualization (max value = 100%)
-    const maxCount = Math.max(...counts, 1); // Avoid division by zero
-    const heights = counts.map(c => Math.round((c / maxCount) * 100));
-
-    return { days, counts, heights };
+    return { days, counts };
   }, [tasks]);
 
   return (
@@ -98,26 +98,36 @@ export default function DashboardPage() {
               <span className="material-symbols-outlined">more_horiz</span>
             </button>
           </div>
-          {/* Custom CSS Bar Chart */}
-          <div className="flex-1 flex items-end justify-between gap-2 md:gap-6 min-h-[200px] px-2 pb-2">
-            {productivityData.heights.map((height, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 w-full group cursor-pointer">
-                <div className="w-full max-w-[40px] bg-[#1f68f9]/20 rounded-t-sm h-full relative overflow-hidden group-hover:bg-[#1f68f9]/30 transition-all">
-                  <div
-                    className="absolute bottom-0 w-full bg-[#1f68f9] rounded-t-sm transition-all duration-500 ease-out"
-                    style={{ height: `${height}%` }}
-                  ></div>
-
-                  {/* Tooltip for exact count */}
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                    {productivityData.counts[i]} tasks
-                  </div>
-                </div>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  {productivityData.days[i]}
-                </span>
-              </div>
-            ))}
+          <div className="flex-1 w-full h-full">
+            <BarChart
+              xAxis={[{
+                scaleType: 'band',
+                data: productivityData.days,
+                disableTicks: true,
+                categoryGapRatio: 0.15,
+              }]}
+              yAxis={[{ position: 'left' }]}
+              series={[{
+                data: productivityData.counts,
+                color: '#1f68f9',
+                barGapRatio: 0.2,
+                valueFormatter: (value) => `${value} tasks completed`,
+              }]}
+              margin={{ top: 12, bottom: 44, left: 12, right: 10 }}
+              borderRadius={4}
+              height={280}
+              slotProps={{ legend: { hidden: true } }}
+              sx={{
+                '.MuiChartsAxis-line': { stroke: 'none' },
+                '.MuiChartsAxis-tick': { stroke: 'none' },
+                // Hide left Y-axis numbers
+                '.MuiChartsAxis-left .MuiChartsAxis-tickLabel': { display: 'none' },
+                // Keep X-axis day labels centered with the bars
+                '.MuiChartsAxis-bottom .MuiChartsAxis-tickLabel': { transform: 'none' },
+                // Keep default label styling for any remaining axes (e.g., bottom X)
+                '.MuiChartsAxis-tickLabel': { fill: '#94a3b8 !important', fontSize: '0.75rem', fontWeight: 500 },
+              }}
+            />
           </div>
         </div>
 
