@@ -1,8 +1,12 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../store/authStore';
 
 const TaskMasterSignup: React.FC = () => {
+  const router = useRouter();
+  const { signup, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -10,6 +14,14 @@ const TaskMasterSignup: React.FC = () => {
     confirmPassword: '',
     agreedToTerms: false,
   });
+  const [localError, setLocalError] = useState<string>('');
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -19,9 +31,30 @@ const TaskMasterSignup: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Sign Up Data:', formData);
+    setLocalError('');
+    clearError();
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setLocalError('Passwords do not match');
+      return;
+    }
+
+    // Validate terms accepted
+    if (!formData.agreedToTerms) {
+      setLocalError('You must agree to the Terms and Privacy Policy');
+      return;
+    }
+
+    try {
+      await signup(formData.fullName, formData.email, formData.password);
+      router.push('/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Signup failed';
+      setLocalError(errorMessage);
+    }
   };
 
   return (
@@ -40,6 +73,15 @@ const TaskMasterSignup: React.FC = () => {
             Join TaskMaster to organize your work.
           </p>
         </div>
+
+        {/* Error Message */}
+        {(localError || error) && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+            <p className="text-sm text-red-700 dark:text-red-400">
+              {localError || error}
+            </p>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -179,9 +221,10 @@ const TaskMasterSignup: React.FC = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="mt-4 flex w-full justify-center rounded-lg border border-transparent bg-[#1f68f9] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-[#1f68f9] focus:ring-offset-2"
+            disabled={isLoading}
+            className="mt-4 flex w-full justify-center rounded-lg border border-transparent bg-[#1f68f9] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-[#1f68f9] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Account
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 

@@ -1,11 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../../store/authStore';
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const { logout, user } = useAuthStore();
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
   const [desktopNotifs, setDesktopNotifs] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   return (
     <div className="flex flex-col h-full max-w-[1000px] mx-auto w-full">
@@ -94,9 +103,12 @@ export default function SettingsPage() {
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-sm text-slate-500 dark:text-slate-400">
-               You are currently logged in as <span className="text-slate-900 dark:text-white font-medium">alex@taskmaster.com</span>
+               You are currently logged in as <span className="text-slate-900 dark:text-white font-medium">{user?.email || 'user@example.com'}</span>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm font-medium w-fit">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm font-medium w-fit"
+            >
                 <span className="material-symbols-outlined text-lg">logout</span>
                 Log Out
             </button>

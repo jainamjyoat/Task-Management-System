@@ -1,15 +1,36 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from './store/authStore';
 
 const TaskMasterLogin: React.FC = () => {
+  const router = useRouter();
+  const { login, isLoading, error, clearError, isAuthenticated } = useAuthStore();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [localError, setLocalError] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Logging in with:', { email, password });
+    setLocalError('');
+    clearError();
+
+    try {
+      await login(email, password);
+      router.push('/dashboard');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      setLocalError(errorMessage);
+    }
   };
 
   return (
@@ -104,6 +125,13 @@ const TaskMasterLogin: React.FC = () => {
           </div>
 
           <div className="mt-10">
+            {(localError || error) && (
+              <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <p className="text-sm text-red-700 dark:text-red-400">
+                  {localError || error}
+                </p>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium leading-6" htmlFor="email">
@@ -153,9 +181,10 @@ const TaskMasterLogin: React.FC = () => {
               <div>
                 <button
                   type="submit"
-                  className="flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all duration-200"
+                  disabled={isLoading}
+                  className="flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Sign in
+                  {isLoading ? 'Signing in...' : 'Sign in'}
                 </button>
               </div>
             </form>
