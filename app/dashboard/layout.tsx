@@ -65,18 +65,18 @@ export default function DashboardLayout({
 
           <div className="flex flex-col gap-3 px-2 py-2 mt-2 border-t border-slate-200 dark:border-slate-800 pt-4">
             <div className="flex items-center gap-3">
-              <img
+              {/* <img
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
                 alt="Profile"
                 className="rounded-full size-10 bg-slate-200 object-cover"
-              />
+              /> */}
               <div className="flex flex-col">
-                <p className="text-slate-900 dark:text-white text-sm font-medium">
+                {/* <p className="text-slate-900 dark:text-white text-sm font-medium">
                   Alex Morgan
                 </p>
                 <p className="text-slate-500 dark:text-slate-400 text-xs">
                   alex@taskmaster.com
-                </p>
+                </p> */}
               </div>
             </div>
             <LogoutButton />
@@ -145,12 +145,12 @@ export default function DashboardLayout({
               className="rounded-full size-10 bg-slate-200 object-cover"
             />
             <div className="flex flex-col">
-              <p className="text-slate-900 dark:text-white text-sm font-medium">
+              {/* <p className="text-slate-900 dark:text-white text-sm font-medium">
                 Alex Morgan
               </p>
               <p className="text-slate-500 dark:text-slate-400 text-xs">
                 alex@taskmaster.com
-              </p>
+              </p> */}
             </div>
           </div>
         </div>
