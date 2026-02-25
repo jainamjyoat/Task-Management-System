@@ -14,6 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname(); // 3. Get the current URL path
+  const { user } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false); // Add helpOpen state
@@ -59,24 +60,25 @@ export default function DashboardLayout({
           </nav>
         </div>
 
-        {/* ... Rest of Sidebar (New Task Button, Profile) ... */}
+        {/* Sidebar footer: New Task + User Profile */}
         <div className="flex flex-col gap-4">
           <NewTaskButton />
 
           <div className="flex flex-col gap-3 px-2 py-2 mt-2 border-t border-slate-200 dark:border-slate-800 pt-4">
             <div className="flex items-center gap-3">
-              {/* <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
-                alt="Profile"
-                className="rounded-full size-10 bg-slate-200 object-cover"
-              /> */}
-              <div className="flex flex-col">
-                {/* <p className="text-slate-900 dark:text-white text-sm font-medium">
-                  Alex Morgan
+              <img
+                src={user?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.fullName || 'User')}`}
+                alt={user?.fullName || 'User'}
+                className="rounded-full size-10 bg-slate-200 object-cover ring-2 ring-[#1f68f9]/30"
+                referrerPolicy="no-referrer"
+              />
+              <div className="flex flex-col min-w-0">
+                <p className="text-slate-900 dark:text-white text-sm font-semibold truncate">
+                  {user?.fullName || 'Guest'}
                 </p>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">
-                  alex@taskmaster.com
-                </p> */}
+                <p className="text-slate-500 dark:text-slate-400 text-xs truncate">
+                  {user?.email || ''}
+                </p>
               </div>
             </div>
             <LogoutButton />
@@ -135,22 +137,23 @@ export default function DashboardLayout({
           </nav>
         </div>
 
-        {/* Footer */}
+        {/* Mobile Sidebar Footer */}
         <div className="flex flex-col gap-4">
           <NewTaskButton />
           <div className="flex items-center gap-3 px-2 py-2 mt-2 border-t border-slate-200 dark:border-slate-800 pt-4">
             <img
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
-              alt="Profile"
-              className="rounded-full size-10 bg-slate-200 object-cover"
+              src={user?.picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user?.fullName || 'User')}`}
+              alt={user?.fullName || 'User'}
+              className="rounded-full size-10 bg-slate-200 object-cover ring-2 ring-[#1f68f9]/30"
+              referrerPolicy="no-referrer"
             />
-            <div className="flex flex-col">
-              {/* <p className="text-slate-900 dark:text-white text-sm font-medium">
-                Alex Morgan
+            <div className="flex flex-col min-w-0">
+              <p className="text-slate-900 dark:text-white text-sm font-semibold truncate">
+                {user?.fullName || 'Guest'}
               </p>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">
-                alex@taskmaster.com
-              </p> */}
+              <p className="text-slate-500 dark:text-slate-400 text-xs truncate">
+                {user?.email || ''}
+              </p>
             </div>
           </div>
         </div>
@@ -250,7 +253,7 @@ export default function DashboardLayout({
                 <span className="material-symbols-outlined">help</span>
               </button>
             </div>
-            </div>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
